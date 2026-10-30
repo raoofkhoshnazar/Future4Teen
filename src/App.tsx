@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type View = "home" | "flow" | "dashboard" | "parent" | "paths" | "chat" | "community" | "support" | "auth" | "plans" | "system";
 
-const photo =
-  "https://images.unsplash.com/photo-1567886076836-365a137bbe46?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=1200";
-
 function Icon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, React.ReactNode> = {
+    menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+    close: <path d="m6 6 12 12M18 6 6 18" />,
+    plus: <path d="M12 5v14M5 12h14" />,
+    send: <path d="M12 19V5m-6 6 6-6 6 6" />,
     arrow: <><path d="M5 12h14M12 5l7 7-7 7" /></>,
     spark: <><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" /><path d="m5 16 .7 2.3L8 19l-2.3.7L5 22l-.7-2.3L2 19l2.3-.7L5 16Z" /></>,
     shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></>,
@@ -36,39 +37,49 @@ const areas = [
   ["تحصیلات", 76, "#716BE8"], ["مهارت‌آموزی", 68, "#DA8C44"], ["شبکه‌سازی", 41, "#45A6A0"],
 ];
 
-function Header({ view, setView }: { view: View; setView: (v: View) => void }) {
-  return <header className="header">
-    <button className="brand" onClick={() => setView("home")}><span className="brand-mark"><Icon name="spark" /></span><span><b>فردای من</b><small>future4teen</small></span></button>
-    <nav>{nav.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}>{item.label}</button>)}</nav>
-    <div className="header-actions"><button className="link-btn" onClick={() => setView("auth")}>ورود</button><button className="primary small" onClick={() => setView("auth")}>شروع مسیر من <Icon name="arrow" size={17} /></button></div>
-  </header>;
+function Sidebar({ view, setView }: { view: View; setView: (v: View) => void }) {
+  const [open, setOpen] = useState(false);
+  const navigate = (next: View) => { setView(next); setOpen(false); };
+  const icons: Partial<Record<View, string>> = { home: "spark", dashboard: "chart", paths: "book", chat: "chat", community: "heart", support: "shield", plans: "spark" };
+  return <>
+    <button className="mobile-menu" aria-label={open ? "بستن منو" : "باز کردن منو"} aria-expanded={open} aria-controls="main-sidebar" onClick={() => setOpen(!open)}><Icon name={open ? "close" : "menu"} /></button>
+    {open && <button className="sidebar-backdrop" aria-label="بستن منو" onClick={() => setOpen(false)} />}
+    <aside id="main-sidebar" className={`site-sidebar${open ? " is-open" : ""}`} onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }}>
+      <button className="brand" onClick={() => navigate("home")}><span className="brand-mark"><Icon name="spark" /></span><span><b>فردای من</b><small>future4teen</small></span></button>
+      <button className="new-conversation" onClick={() => navigate("home")}><Icon name="plus" size={18} /> یک شروع تازه</button>
+      <span className="nav-caption">فضای رشد تو</span>
+      <nav aria-label="منوی اصلی">{nav.map((item) => <button key={item.id} aria-current={view === item.id ? "page" : undefined} className={view === item.id ? "active" : ""} onClick={() => navigate(item.id)}><Icon name={icons[item.id] || "spark"} size={19} />{item.label}</button>)}</nav>
+      <div className="sidebar-bottom"><div className="sidebar-note"><Icon name="shield" size={19} /><div><b>با خیال راحت، خودت باش</b><p>هر روز، یک قدم نزدیک‌تر به آینده‌ات.</p></div></div><button className="sidebar-account" onClick={() => navigate("auth")}><span className="account-avatar"><Icon name="user" size={19} /></span><span><b>حساب کاربری من</b><small>ورود یا ساخت حساب</small></span><Icon name="arrow" size={16} /></button></div>
+    </aside>
+  </>;
 }
 
-function Home({ setView }: { setView: (v: View) => void }) {
-  return <main>
-    <section className="hero">
-      <div className="hero-copy">
-        <div className="eyebrow"><Icon name="spark" size={16} /> اینجا قراره خودِ واقعی‌ات رو بیشتر بشناسی</div>
-        <h1>سلام! آماده‌ای آینده‌ای که<br />دوستش داری رو <em>بسازی؟</em></h1>
-        <p>هر چیزی که برای حال خوب و آینده‌ات نیاز داری، یک‌جا کنارته؛ از سلامت و دوست‌ها تا درس، مهارت و پیدا کردن مسیر خودت. بدون قضاوت، درست با سرعت خودت.</p>
-        <div className="hero-actions">
-          <button className="primary" onClick={() => setView("flow")}>من یک نوجوانم <Icon name="arrow" size={19} /></button>
-          <button className="secondary" onClick={() => setView("parent")}><Icon name="shield" size={19} /> من یک والدم</button>
-        </div>
-        <div className="trust"><span className="avatars"><i>ن</i><i>س</i><i>ر</i></span><span><b>+۲,۴۰۰ دختر</b> مسیر رشدشان را شروع کرده‌اند</span></div>
-      </div>
-      <div className="hero-visual">
-        <div className="blob"></div>
-        <img src={photo} alt="نوجوانی در حال یادگیری و ساختن آینده خود" />
-        <div className="float-card progress-card"><span className="round-icon coral"><Icon name="chart" /></span><div><small>رشد این ماه</small><b>۲۴٪ پیشرفت</b></div><strong>↑</strong></div>
-        <div className="float-card ai-card"><span className="round-icon violet"><Icon name="chat" /></span><div><b>همراه هوشمند تو</b><small>همیشه کنارتم، نهال!</small></div></div>
-        <span className="doodle d1">✦</span><span className="doodle d2">⌁</span>
-      </div>
+function Home({ setView, onConversation }: { setView: (v: View) => void; onConversation: (message: string) => void }) {
+  const [prompt, setPrompt] = useState("");
+  const input = useRef<HTMLTextAreaElement>(null);
+  const suggestions = [
+    { icon: "book", title: "یه برنامه برای درسام", text: "کمکم کن برای درس‌هام یک برنامه متعادل بچینم." },
+    { icon: "spark", title: "استعدادم رو پیدا کنم", text: "از کجا شروع کنم تا علاقه‌ها و استعدادم رو بهتر بشناسم؟" },
+    { icon: "heart", title: "کمی درباره حالم حرف بزنم", text: "دوست دارم درباره حال امروزم حرف بزنم." },
+    { icon: "chart", title: "یه قدم برای آینده‌ام", text: "چطور برای آینده‌ام یک هدف کوچک و قابل انجام انتخاب کنم؟" },
+  ];
+  const submit = () => { if (prompt.trim()) onConversation(prompt.trim()); };
+  return <main id="main-content" className="home-workspace">
+    <header className="workspace-topbar"><span>فردای من <small>همراه رشد تو</small></span><button className="secondary" onClick={() => setView("plans")}><Icon name="spark" size={16} /> ارتقای همراهی</button></header>
+    <section className="home-center" aria-labelledby="home-title">
+      <div className="home-symbol"><Icon name="spark" size={32} /></div>
+      <span className="home-eyebrow">یک فضای تازه برای خودِ تو</span>
+      <h1 id="home-title">امروز از کجا شروع کنیم؟</h1>
+      <p className="home-intro">از سؤال‌های کوچیک تا رؤیاهای بزرگ، با هم یک قدم جلو می‌ریم.</p>
+      <form className="home-composer" onSubmit={(event) => { event.preventDefault(); submit(); }}>
+        <label className="sr-only" htmlFor="home-prompt">چه چیزی توی ذهنته؟</label>
+        <textarea id="home-prompt" ref={input} value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="هر چی توی ذهنته، اینجا بنویس..." rows={3} maxLength={4000} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); submit(); } }} />
+        <div className="home-composer-toolbar"><span><Icon name="spark" size={16} /> همراه من <small>نسخهٔ نمایشی</small></span><button type="submit" disabled={!prompt.trim()} aria-label="شروع گفت‌وگو"><Icon name="send" /></button></div>
+      </form>
+      <div className="home-suggestions" aria-label="ایده‌هایی برای شروع">{suggestions.map((suggestion) => <button key={suggestion.title} onClick={() => { setPrompt(suggestion.text); input.current?.focus(); }}><Icon name={suggestion.icon} size={19} /><span>{suggestion.title}</span></button>)}</div>
+      <div className="home-shortcuts"><button onClick={() => setView("flow")}>تازه اینجایی؟ مسیرت رو پیدا کن <Icon name="arrow" size={15} /></button><span /><button onClick={() => setView("parent")}>ورود به فضای والدین <Icon name="shield" size={15} /></button></div>
     </section>
-    <section className="promise">
-      <div><span className="section-kicker">همه‌چیز برای رشد تو</span><h2>یک زندگی، ۹ بُعد مهم</h2><p>برای آینده فقط نمره مهم نیست. با یک نگاه کامل، همه ابعاد زندگی‌ات را با هم رشد می‌دهیم.</p></div>
-      <div className="mini-areas">{areas.slice(0, 5).map(([name, , color]) => <span key={String(name)}><i style={{ background: String(color) }}></i>{name}</span>)}</div>
-    </section>
+    <footer className="home-footer">با سرعت خودت رشد کن. این نسخه نمایشی است و پیام‌ها به سرویس هوش مصنوعی ارسال نمی‌شوند.</footer>
   </main>;
 }
 
@@ -130,7 +141,7 @@ function Plans() {
   </main>;
 }
 
-function Chat() {
+function Chat({ initialMessage }: { initialMessage: string }) {
   const [mode, setMode] = useState<"ai" | "mentor">("ai");
   const [uploaded, setUploaded] = useState("");
   return <main className="chat-page">
@@ -143,9 +154,9 @@ function Chat() {
       <header><div className="bot-avatar"><Icon name={mode === "ai" ? "spark" : "user"} /></div><div><b>{mode === "ai" ? "رُزا، همراه هوشمند" : "مریم، منتور تو"}</b><small><i /> آنلاین</small></div></header>
       <div className="messages">
         <span className="day-label">امروز</span>
-        <div className="message bot">سلام نهال! امروز چه حسی داری؟ من اینجام تا با هم حرف بزنیم.</div>
+        {initialMessage ? <><div className="message me">{initialMessage}</div><p className="chat-demo-note" role="status">پیامت در این پیش‌نمایش نمایش داده شده؛ پاسخ هوشمند در نسخهٔ نمایشی فعال نیست.</p></> : <><div className="message bot">سلام نهال! امروز چه حسی داری؟ من اینجام تا با هم حرف بزنیم.</div>
         <div className="message me">برای پروژه مدرسه بین عکاسی و طراحی پوستر مرددم.</div>
-        <div className="message bot">چه انتخاب‌های جذابی! اگر دوست داری یک نمونه از کارهات رو بفرست تا با هم مقایسه‌شون کنیم.</div>
+        <div className="message bot">چه انتخاب‌های جذابی! اگر دوست داری یک نمونه از کارهات رو بفرست تا با هم مقایسه‌شون کنیم.</div></>}
         {uploaded && <div className="message me upload-preview"><div><Icon name="book" size={28} /></div><span><b>{uploaded}</b><small>تصویر با موفقیت آماده ارسال شد</small></span></div>}
       </div>
       <div className="suggestions"><button>کمک برای تصمیم‌گیری</button><button>برنامه امروز من</button><button>می‌خوام حرف بزنم</button></div>
@@ -203,8 +214,8 @@ function Auth({ setView }: { setView: (v: View) => void }) {
 }
 
 function DesignSystem() {
-  return <main className="page system"><div className="page-heading aligned"><span className="section-kicker">FOUNDATIONS</span><h1>Design System پایه</h1><p>زبان بصری گرم، امن و قابل اعتماد؛ مناسب نوجوان و والد.</p></div>
-    <div className="system-grid"><section><h2>رنگ‌ها</h2><div className="swatches"><div><i className="s-purple" /><b>بنفش اصلی</b><small>#6754D9</small></div><div><i className="s-coral" /><b>مرجانی گرم</b><small>#F06E5B</small></div><div><i className="s-cream" /><b>پس‌زمینه</b><small>#FBF9F5</small></div><div><i className="s-ink" /><b>متن اصلی</b><small>#25232D</small></div></div></section>
+  return <main className="page system"><div className="page-heading aligned"><span className="section-kicker">FOUNDATIONS</span><h1>Design System پایه</h1><p>زبان بصری مینیمال با سبز فسفری؛ مناسب نوجوان و والد.</p></div>
+    <div className="system-grid"><section><h2>رنگ‌ها</h2><div className="swatches"><div><i className="s-purple" /><b>سبز فسفری</b><small>#B4FF39</small></div><div><i className="s-coral" /><b>سبز مکمل</b><small>#397500</small></div><div><i className="s-cream" /><b>پس‌زمینه</b><small>#FCFDFB</small></div><div><i className="s-ink" /><b>متن اصلی</b><small>#20271D</small></div></div></section>
     <section><h2>تایپوگرافی</h2><div className="type-sample"><b>عنوان نمایشی · ۴۸</b><strong>آینده از امروز شروع می‌شود</strong><span>متن بدنه · ۱۶</span><p>خوانا، دوستانه و با فاصله مناسب برای فارسی</p></div></section>
     <section className="components"><h2>کامپوننت‌ها</h2><div><button className="primary">دکمه اصلی</button><button className="secondary">دکمه دوم</button><span className="pill">برچسب وضعیت</span><div className="sample-input">عنوان یا هدف خود را بنویسید...</div></div></section>
     <section><h2>اصول طراحی</h2><div className="principles"><span><Icon name="shield" /><b>امن و قابل اعتماد</b></span><span><Icon name="heart" /><b>بدون قضاوت</b></span><span><Icon name="spark" /><b>پیشرفت ملموس</b></span></div></section></div>
@@ -213,5 +224,6 @@ function DesignSystem() {
 
 export default function App() {
   const [view, setView] = useState<View>("home");
-  return <div dir="rtl"><Header view={view} setView={setView} />{view === "home" && <Home setView={setView} />}{view === "flow" && <Flow />}{view === "dashboard" && <Dashboard setView={setView} />}{view === "parent" && <ParentDashboard setView={setView} />}{view === "paths" && <Paths />}{view === "chat" && <Chat />}{view === "community" && <Community />}{view === "support" && <Support />}{view === "auth" && <Auth setView={setView} />}{view === "plans" && <Plans />}{view === "system" && <DesignSystem />}<button className="system-link" onClick={() => setView("system")}>Design System</button></div>;
+  const [initialMessage, setInitialMessage] = useState("");
+  return <div dir="rtl" className="site-layout"><a className="skip-link" href="#main-content">رفتن به محتوا</a><Sidebar view={view} setView={setView} /><div className="site-content" id={view !== "home" ? "main-content" : undefined}>{view === "home" && <Home setView={setView} onConversation={(message) => { setInitialMessage(message); setView("chat"); }} />}{view === "flow" && <Flow />}{view === "dashboard" && <Dashboard setView={setView} />}{view === "parent" && <ParentDashboard setView={setView} />}{view === "paths" && <Paths />}{view === "chat" && <Chat initialMessage={initialMessage} />}{view === "community" && <Community />}{view === "support" && <Support />}{view === "auth" && <Auth setView={setView} />}{view === "plans" && <Plans />}{view === "system" && <DesignSystem />}<button className="system-link" onClick={() => setView("system")}>Design System</button></div></div>;
 }

@@ -1,0 +1,11 @@
+{
+  "title": "Future4Teen",
+  "description": "A Persian-language life coaching platform for teen girls, offering personalized learning, progress tracking, AI guidance, mentorship, and parent oversight.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
